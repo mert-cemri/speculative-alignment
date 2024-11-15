@@ -1,6 +1,9 @@
 import torch
 from torch.nn import functional as F
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from colorama import Fore, Style
 
+access_token = "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"
 # copy from https://github.com/LeeSinLiang/microGPT/blob/ed40cf9780dbeb180adfe94c227d4aa97e69250e/gpt.py
 def top_k_top_p_filter(logits: torch.Tensor, top_k: int = 0, top_p: float = 0.0):
     """
@@ -47,9 +50,12 @@ def norm_logits(logits : torch.Tensor, temperature : float, top_k : float, top_p
 
 
 def sample(probs : torch.Tensor, num_samples: int = 1):
+    # print(111)
     idx_next = torch.multinomial(probs, num_samples=num_samples)
-    if (idx_next.item() == 0):
-        raise RuntimeError
+    # print(222)
+    # print(idx_next)
+    # if (idx_next.item() == 0):
+    #     raise RuntimeError
     return idx_next
 
 
@@ -81,3 +87,26 @@ class Decoder(metaclass=Singleton):
     
     def decode(self, t: torch.Tensor) -> str:
         return self.tokenizer.decode(t[0], skip_special_tokens=True)
+    
+def create_models(approx_model_name,target_model_name):
+    print('=====doing tokenizer')
+    
+    tokenizer = AutoTokenizer.from_pretrained(approx_model_name, trust_remote_code=True,token=access_token)
+  
+    Decoder().set_tokenizer(tokenizer)
+    
+    print(f"begin loading models: \n {approx_model_name} \n {target_model_name}")
+    small_model = AutoModelForCausalLM.from_pretrained(approx_model_name, 
+                                                       torch_dtype=torch.float16,
+                                                       device_map="cuda:2",token=access_token,
+                                                       trust_remote_code=True)
+    large_model = AutoModelForCausalLM.from_pretrained(target_model_name, 
+                                                       torch_dtype=torch.float16,
+                                                       device_map="cuda:2",token=access_token,
+                                                       trust_remote_code=True)
+
+    print("finish loading models")
+    return small_model, large_model, tokenizer
+
+def color_print(text):
+    print(Fore.RED + text + Style.RESET_ALL)
