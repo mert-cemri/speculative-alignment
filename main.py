@@ -123,7 +123,7 @@ if __name__ == "__main__":
     count = 0
     spec_rewards = []
     align_rewards = []
-    for test in test_data[:150]:
+    for test in test_data[1:10]:
         count +=1 
         print("Doing",count)
         if len(test) > 30 :

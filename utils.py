@@ -88,7 +88,7 @@ class Decoder(metaclass=Singleton):
     def decode(self, t: torch.Tensor) -> str:
         return self.tokenizer.decode(t[0], skip_special_tokens=True)
     
-def create_models(approx_model_name,target_model_name):
+def create_models(approx_model_name,target_model_name,device='cuda:2'):
     print('=====doing tokenizer')
     
     tokenizer = AutoTokenizer.from_pretrained(approx_model_name, trust_remote_code=True,token=access_token)
@@ -98,11 +98,11 @@ def create_models(approx_model_name,target_model_name):
     print(f"begin loading models: \n {approx_model_name} \n {target_model_name}")
     small_model = AutoModelForCausalLM.from_pretrained(approx_model_name, 
                                                        torch_dtype=torch.float16,
-                                                       device_map="cuda:2",token=access_token,
+                                                       device_map=device,token=access_token,
                                                        trust_remote_code=True)
     large_model = AutoModelForCausalLM.from_pretrained(target_model_name, 
                                                        torch_dtype=torch.float16,
-                                                       device_map="cuda:2",token=access_token,
+                                                       device_map=device,token=access_token,
                                                        trust_remote_code=True)
 
     print("finish loading models")
